@@ -96,6 +96,18 @@ const getCourse = (courseId) => {
     })
 }
 
+// Test Endpoint 
+app.get('/api/lepaya-courses/:id', async(req, res) => {
+    try{
+        const course = await getCourse(req.params.id)
+        res.json({...course})
+    }catch(e){
+        res.json({
+            error: e,
+        })
+    }
+})
+
 app.listen(PORT, () => {
     console.log("Server is running on PORT : ", PORT)
 })
