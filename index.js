@@ -9,6 +9,8 @@ const API_BASE_URL = 'https://kbfszrxx5vacidgrgdhqzu25r40vyyuw.lambda-url.eu-cen
 
 // Cache
 const LEARNERS_CACHE = {};
+const TRAINERS_CACHE = {};
+
 
 // Get leaner based on learner id
 const getLearner = learnerId => {
@@ -39,6 +41,27 @@ const getLearners = learnerIds => {
     return Promise.all(promises);
 }
 
+
+// Get trainer based on trainerId
+const getTrainer = (trainerId) => {
+    return new Promise((resolve, reject) => {
+        // Retrieving from cache if trainer exists in cache
+        if(TRAINERS_CACHE.hasOwnProperty(trainerId)){
+            resolve(TRAINERS_CACHE[trainerId]);
+        }else{ // Retrieving from External API if trainer not found in cache
+            axios.get(`${API_BASE_URL}/api/trainers/${trainerId}`)
+            .then(response => {
+                // setting up learner in trainer cache
+                TRAINERS_CACHE[trainerId] = response.data;
+                resolve(response.data);
+            })
+            .catch(error => {
+                reject(error);
+            });
+        }
+    })
+}
+
 app.listen(PORT, () => {
     console.log("Server is running on PORT : ", PORT)
 })
@@ -46,5 +69,6 @@ app.listen(PORT, () => {
 
 module.exports = {
     getLearner,
-    getLearners
+    getLearners,
+    getTrainer
 }

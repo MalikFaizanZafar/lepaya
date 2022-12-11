@@ -1,4 +1,4 @@
-const { getLearner, getLearners }  = require(".");
+const { getLearner, getLearners, getTrainer }  = require(".");
 
 describe("getLearner Tests", () => {
 
@@ -34,6 +34,27 @@ describe("getLearners Tests", () => {
         const expectedResult = { statusCode: 404, error: 'Not Found', message: 'Not Found' };
         try{
             await getLearners(learnerIds);
+        }catch(e){
+            const result = e.response.data;
+            expect(result).toMatchObject(expectedResult);
+        }
+    })
+})
+
+
+describe("getTrainer Tests", () => {
+    test("getTrainer should return a trainer given trainerId exists", async() => {
+        const trainerId = '65145028-c761-429d-a16b-fd41662dd793';
+        const expectedResult = {id:"65145028-c761-429d-a16b-fd41662dd793", name:"Willis Schamberger"};
+        const result = await getTrainer(trainerId);
+        expect(result).toMatchObject(expectedResult);
+    })
+
+    test("getTrainer should throw an error given trainerId does not exists", async() => {
+        const trainerId = 'some-random-trainer-id';
+        const expectedResult = { statusCode: 404, error: 'Not Found', message: 'Not Found' };
+        try{
+            await getTrainer(trainerId);
         }catch(e){
             const result = e.response.data;
             expect(result).toMatchObject(expectedResult);
