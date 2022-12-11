@@ -7,10 +7,11 @@ const axios = require('axios');
 const PORT = 4000;
 const API_BASE_URL = 'https://kbfszrxx5vacidgrgdhqzu25r40vyyuw.lambda-url.eu-central-1.on.aws';
 
-// Cache
+// Cache - using cache locally for memoization and avoiding external API calls
+// In real world production environment, some in memory datastore like redis or memcache should have been used
 const LEARNERS_CACHE = {};
 const TRAINERS_CACHE = {};
-
+const COURSES_CACHE = {};
 
 // Get leaner based on learner id
 const getLearner = learnerId => {
@@ -62,6 +63,39 @@ const getTrainer = (trainerId) => {
     })
 }
 
+// Get course based on courseId
+const getCourse = (courseId) => {
+    return new Promise((resolve, reject) => {
+    // Retrieving from cache if course exists
+    if(COURSES_CACHE.hasOwnProperty(courseId)){
+        resolve(COURSES_CACHE[courseId])
+    }else{ // Retrieving from External API if course not found in cache
+        axios.get(`${API_BASE_URL}/api/courses/${courseId}`)
+        .then(async response => {
+            // Getting trainer associcated with the course
+            const courseTrainer = await getTrainer(response.data.trainerId);
+            
+            // Getting all learners associated with the course based on unique learner Ids
+            const courseLearners = await getLearners([...new Set(response.data.learners)]);
+            const course = {
+                ...response.data
+            }
+            // Setting fields for trainer and learners for course object
+            course.trainer = courseTrainer;
+            course.learners = courseLearners;
+
+            // deleting the trainerId from course object
+            delete course.trainerId;
+
+            resolve(course);
+        })
+        .catch(error => {
+            reject(error);
+        });
+    }
+    })
+}
+
 app.listen(PORT, () => {
     console.log("Server is running on PORT : ", PORT)
 })
@@ -70,5 +104,6 @@ app.listen(PORT, () => {
 module.exports = {
     getLearner,
     getLearners,
-    getTrainer
+    getTrainer,
+    getCourse
 }
